@@ -47,7 +47,7 @@ step  = 0.005
 # alpha, beta, and gamma are all greater than 0
 # xlimValue and ylimValue are for plots of x vs n or v vs n 
 
-simCase = "VS"
+simCase = "standard"
 
 if simCase == "paraclete":
    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.010, 0.900 # paraclete
@@ -150,14 +150,14 @@ def plotFigure(mu0, ptsX, ptsY):
     ax.set_ylabel("y",size = 16)
     ax.xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
     ax.yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
-    plt.xlim(-0.01, 1.01)
-    plt.ylim(-0.01, 1.01)
+    plt.xlim(-0.01, xlimValue * 1.01)
+    plt.ylim(-0.01, ylimValue * 1.01)
     plt.grid(True)
     plt.savefig(str(folderTraj)+"Trajectory"+"_{:.5f}".format(mu0)+".jpg")
     plt.close()
 
 # added to save csv of x vs. n and y vs. n
-def outPutPoPVsN(nIterations,mu0, ptsX, ptsY):
+def outPutPoPVsIteration(nIterations,mu0, ptsX, ptsY):
     data = {'nIterations': nIterations,'prey': ptsX,'ptsY':ptsY}
     df = pd.DataFrame(data)
     df_file = open(str(folderPopVsN)+"PopVsN"+"_{:.5f}".format(mu0)+".csv",'w',newline='')
@@ -165,8 +165,8 @@ def outPutPoPVsN(nIterations,mu0, ptsX, ptsY):
     df_file.close()
 
 # added to plot x vs. n and y vs. n  
-def plotFiguresSameN(nIterations,mu0, ptsX, ptsY):
-    fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True)
+def plotPopVsIteration(nIterations,mu0, ptsX, ptsY):
+    fig, ax = plt.subplots(2, 1, figsize=(6,4), constrained_layout=True)
     
     # the first subplot
     xAxis = 200
@@ -646,8 +646,8 @@ for mu_ in mu:
         
         plotFigure(mu_, traceX, traceY)                  # set alpha=0.1 for chaos
         ax.plot(traceX,traceY,'.',color = color,alpha=0.2,markersize=3)
-        plotFiguresSameN(np.arange(nIterations),mu_, traceX, traceY)   # added to plot x vs. n and y vs. n
-        outPutPoPVsN(np.arange(nIterations),mu_, traceX, traceY)       # added to save csv of x vs. n and y vs. n
+        plotPopVsIteration(np.arange(nIterations),mu_, traceX, traceY)   # added to plot x vs. n and y vs. n
+        outPutPoPVsIteration(np.arange(nIterations),mu_, traceX, traceY)       # added to save csv of x vs. n and y vs. n
 
         fPtE1, fPtE2, fPtE3 = fixedPoints(mu_)
 
@@ -860,4 +860,4 @@ image_files = [os.path.join(folderYPhaseSpace,img)
                for img in sorted(os.listdir(folderYPhaseSpace))
                if img.endswith(".jpg")]
 clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files[0:-1], fps=fps)
-clip.write_videofile(str(folderYPhaseSpace)+'phaseSpaceY.mp4')
+clip.write_videofile(str(folderYPhaseSpace)+'phaseSpaceY.mp4') #+str(simCase)+"_"

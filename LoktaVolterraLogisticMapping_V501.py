@@ -37,7 +37,7 @@ step  = 0.005
 # initX and initY are numbers between 0 and 1
 # alpha, beta, and gamma are all greater than 0
 
-simCase = "paraclete"
+simCase = "standard"
 
 if simCase == "paraclete":
    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.010, 0.900 # paraclete
@@ -143,13 +143,21 @@ def plotFiguresSameX(mu0ListLM, ptsX, ptsY):
     #plt.show()
     plt.savefig(str(cwd)+"LogisticMap.png")
     
-def outPutLyaExp(mu0ListLP, EqnLx, RLx, ELx1, ELx2, EqnLy, RLy, ELy1, ELy2):
-    data = {'mu0ListLP': mu0ListLP,'EqnLx': EqnLx,'RLx':RLx, 'ELx1':ELx1, 'ELx2':ELx2,
-                                   'EqnLy': EqnLy,'RLy':RLy, 'ELy1':ELy1, 'ELy2':ELy2}
-    df = pd.DataFrame(data)
-    df_file = open(str(cwd)+"LyapunovExponents.csv",'w',newline='')
-    df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
-    df_file.close()
+def outPutLyaExp(mu0ListLP, EqnLx, RLx, ELx1, ELx2, EqnLy, RLy, ELy1, ELy2, omitRosenstein):
+    if omitRosenstein == False:
+       data = {'mu0ListLP': mu0ListLP,'EqnLx': EqnLx,'RLx':RLx, 'ELx1':ELx1, 'ELx2':ELx2,
+                                      'EqnLy': EqnLy,'RLy':RLy, 'ELy1':ELy1, 'ELy2':ELy2}
+       df = pd.DataFrame(data)
+       df_file = open(str(cwd)+"LyapunovExponents.csv",'w',newline='')
+       df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
+       df_file.close()
+    else:
+       data = {'mu0ListLP': mu0ListLP,'EqnLx': EqnLx, 'ELx1':ELx1, 'ELx2':ELx2,
+                                      'EqnLy': EqnLy, 'ELy1':ELy1, 'ELy2':ELy2}
+       df = pd.DataFrame(data)
+       df_file = open(str(cwd)+"LyapunovExponents.csv",'w',newline='')
+       df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
+       df_file.close() 
 #%%    
 nIterations = 2500
 
@@ -331,8 +339,8 @@ if RoEck == True:
             break
         else:               
             try:
-                lya_r_X += [ nolds.lyap_r(X, emb_dim=10)/np.log(2) ]
-                lya_r_Y += [ nolds.lyap_r(Y, emb_dim=10)/np.log(2) ]
+                nolds.lyap_r(X, emb_dim=10)/np.log(2) 
+                nolds.lyap_r(Y, emb_dim=10)/np.log(2) 
             except np.linalg.LinAlgError:
                 if omitRosenstein == False:
                    print("SVD did not converge in least square. Rosenstein omitted.")
@@ -355,9 +363,9 @@ if RoEck == True:
                     lya_e_Y1 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
                     lya_e_Y2 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
 
-# Write Lyaponov Exponents to csv file
+    # Write Lyaponov Exponents to csv file
     outPutLyaExp(mu0ListLP, sumLPX, lya_r_X, lya_e_X1, lya_e_X2, 
-                            sumLPY, lya_r_Y, lya_e_Y1, lya_e_Y2)
+                            sumLPY, lya_r_Y, lya_e_Y1, lya_e_Y2, omitRosenstein)
 #%%
 # plot lyapunov exponents
 fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True)
