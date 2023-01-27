@@ -32,35 +32,45 @@ tolerance = 1e-8
  
 mu0_min = 1
 mu0_max = 4
-step  = 0.005
+step  = 0.005  # 0.001 for extinction and VS, 0.005 for all other
 
 # initX and initY are numbers between 0 and 1
 # alpha, beta, and gamma are all greater than 0
 
-simCase = "standard"
+simCase = "VS"
 
-if simCase == "paraclete":
+###############################################################
+# this block is for testting parameters
+
+#initX, initY, alpha, beta, gamma = 0.100, 0.500, 0.875, 0.018, 1.000 # vorticella strange
+
+#dirname = "{:.5f}".format(initX)+\
+#          "_{:.5f}".format(initY)+\
+#          "_{:.5f}".format(alpha)+\
+#          "_{:.5f}".format( beta)+\
+#          "_{:.5f}".format(gamma)
+####################################################################
+
+####################################################################
+# comment out this block when testing parameters
+if simCase == "Paraclete":
    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.010, 0.900 # paraclete
-elif simCase == "normal":
+elif simCase == "Normal":
    initX, initY, alpha, beta, gamma = 0.200, 0.200, 1.000, 0.001, 0.500 # normal    
-elif simCase == "extinction":
+elif simCase == "Extinction":
    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.500 # extinction
-elif simCase == "standard":
+   step  = 0.001
+elif simCase == "Standard":
    initX, initY, alpha, beta, gamma = 0.100, 0.500, 1.000, 0.100, 0.500 # standard 
-elif simCase == "vorticella":
+elif simCase == "Vorticella": # deprecated in the current study
    initX, initY, alpha, beta, gamma = 0.100, 0.100, 1.000, 0.100, 2.000 # vorticella (bell-shaped)
 elif simCase == "VS":
-   initX, initY, alpha, beta, gamma = 0.100, 0.800, 0.500, 0.010, 1.000 # vorticella strange
+   initX, initY, alpha, beta, gamma = 0.100, 0.500, 0.875, 0.018, 1.000 # vorticella strange
+   step  = 0.001
 else:
     sys.exit("Wrong simCase!")
-
-dirname = "{:.5f}".format(initX)+\
-          "_{:.5f}".format(initY)+\
-          "_{:.5f}".format(alpha)+\
-          "_{:.5f}".format( beta)+\
-          "_{:.5f}".format(gamma)
-
-#dirname = simCase
+dirname = simCase    
+####################################################################
 
 Path(dirname).mkdir(parents=True, exist_ok=True)
 cwd = "./"+str(dirname)+"/"
@@ -83,7 +93,7 @@ writeLog(r'init Y = '+ "{:.5f}\n".format(initY))
 writeLog(r'alpha = '+ "{:.5f}\n".format(alpha))
 writeLog(r'beta = '+ "{:.5f}\n".format(beta))
 writeLog(r'gamma = '+ "{:.5f}\n".format(gamma))
-#%%
+
 # Calculate Lyapunov for Rosenstein and Eckmann Algorithm
 RoEck = True 
 
@@ -116,8 +126,8 @@ def Jacobian(x, y, mu0):
      return xx,xy,yx,yy
 
 def plotFiguresSameX(mu0ListLM, ptsX, ptsY):
-    fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True)
-    plt.title("Logistic Map")
+    fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True, sharex=True)
+    ax[0].set_title("Logistic Map")
     
     # the first subplot
     ax[0].scatter(mu0ListLM,ptsX,color = 'k' , s = 0.1 , marker = '.')
@@ -131,17 +141,13 @@ def plotFiguresSameX(mu0ListLM, ptsX, ptsY):
     # the second subplot
     # shared axis X
     ax[1].scatter(np.array(mu0ListLM),ptsY,color = 'k', s = 0.1, marker = '.')
-    #minorLocatorX = AutoMinorLocator(5) # number of minor intervals per major # inteval
-    #minorLocatorY = AutoMinorLocator(5)
-    ax[1].set_xlabel("$\\mu_{0}$",size = 16)
+    ax[1].set_xlabel(r'$\mu_{0}$',size = 16)
     ax[1].set_ylabel("$y$",size = 16)
     ax[1].xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
     ax[1].yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
     ax[1].grid(True)
 
-    # remove vertical gap between subplots
-    #plt.show()
-    plt.savefig(str(cwd)+"LogisticMap.png")
+    plt.savefig(str(cwd)+str(simCase)+"_"+"LogisticMap.png")
     
 def outPutLyaExp(mu0ListLP, EqnLx, RLx, ELx1, ELx2, EqnLy, RLy, ELy1, ELy2, omitRosenstein):
     if omitRosenstein == False:
@@ -155,14 +161,14 @@ def outPutLyaExp(mu0ListLP, EqnLx, RLx, ELx1, ELx2, EqnLy, RLy, ELy1, ELy2, omit
        data = {'mu0ListLP': mu0ListLP,'EqnLx': EqnLx, 'ELx1':ELx1, 'ELx2':ELx2,
                                       'EqnLy': EqnLy, 'ELy1':ELy1, 'ELy2':ELy2}
        df = pd.DataFrame(data)
-       df_file = open(str(cwd)+"LyapunovExponents.csv",'w',newline='')
+       df_file = open(str(cwd)+str(simCase)+"LyapunovExponents.csv",'w',newline='')
        df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
        df_file.close() 
-#%%    
+   
 nIterations = 2500
 
 mu = np.arange(mu0_min, mu0_max, step)
-muList = [mu0_min]
+muList = [] # why is this not just empty list?
 # Find suitable muList
 for mu_ in mu: 
     traceX = np.zeros(nIterations)
@@ -193,18 +199,18 @@ for mu_ in mu:
         else:
             if x_next < 0 and abs(x_next) < tolerance:
                 x_next = 0.0
-            if x_next < 0 :
+            if x_next < 0 or x_next >1:
                 exception = True
                 print("Warning Line 185! x_next negative x_next = {} at mu_ = {}".format(x_next, mu_))
                 break
             if y_next < 0 and abs(y_next) < tolerance:
                 y_next = 0.0
-            if y_next < 0:
+            if y_next < 0 or y_next >1:
                 exception = True
                 print("Warning Line 191! y_next negative y_next = {} at mu_ = {}".format(y_next, mu_))
                 break
             traceX[i+1] = x_next
-            traceY[i+1] = y_next
+            traceY[i+1] = y_next                 
             i += 1
     if exception == False:
         muList += [mu_]
@@ -214,7 +220,7 @@ for mu_ in mu:
 
 mu = muList 
 # end of find suitable muList 
-#%%
+
 # plot bifurcation
 nIterations = 600 # Reduce nIterations if the black area is large. 
 avoidTransient = 200
@@ -263,7 +269,6 @@ for mu_ in mu:
     if exception == True:
         break
     else:
-        #mu0ListLP += [mu_]
         try:
             np.log( abs((w[0]) ) )
         except RuntimeWarning:
@@ -337,39 +342,28 @@ if RoEck == True:
         if exception == True: 
             print("Warning! mu0List error! Line 322")
             break
-        else:               
+        else:
             try:
-                nolds.lyap_r(X, emb_dim=10)/np.log(2) 
-                nolds.lyap_r(Y, emb_dim=10)/np.log(2) 
+                lya_r_X += [ nolds.lyap_r(X, emb_dim=10)/np.log(2) ]
+                lya_r_Y += [ nolds.lyap_r(Y, emb_dim=10)/np.log(2) ]
             except np.linalg.LinAlgError:
                 if omitRosenstein == False:
-                   print("SVD did not converge in least square. Rosenstein omitted.")
+                   print("SVD did not converge in linear least square. Rosenstein omitted.")
                    omitRosenstein = True
+                lya_r_X = []
+                lya_r_Y = []
+            finally:
                 lya_e_X1 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
                 lya_e_X2 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
                 lya_e_Y1 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
                 lya_e_Y2 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
-            else:
-                if omitRosenstein == False:
-                    lya_e_X1 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
-                    lya_e_X2 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
-                    lya_e_Y1 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
-                    lya_e_Y2 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
-                    lya_r_X += [ nolds.lyap_r(X, emb_dim=10)/np.log(2) ]
-                    lya_r_Y += [ nolds.lyap_r(Y, emb_dim=10)/np.log(2) ]
-                else:
-                    lya_e_X1 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
-                    lya_e_X2 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
-                    lya_e_Y1 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
-                    lya_e_Y2 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
-
     # Write Lyaponov Exponents to csv file
     outPutLyaExp(mu0ListLP, sumLPX, lya_r_X, lya_e_X1, lya_e_X2, 
                             sumLPY, lya_r_Y, lya_e_Y1, lya_e_Y2, omitRosenstein)
 #%%
 # plot lyapunov exponents
-fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True)
-plt.title("Lyapunov Exponents")
+fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True, sharex=True)
+ax[0].set_title("Lyapunov Exponents")
     
 # the first subplot
 ax[0].plot(np.array(mu0ListLP),np.array(sumLPX),'b-.')
@@ -378,12 +372,16 @@ if RoEck == True:
     if omitRosenstein == False:
        ax[0].plot(np.array(mu0ListLP),np.array(lya_r_X),'k:')
        ax[0].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
-       ax[0].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')  
+       ax[0].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')
        ax[0].legend(["Equation", "Rosenstein", "Eckmann X", "Eckmann Y"], loc ="lower right")
     else:
-       ax[0].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
-       ax[0].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')  
-       ax[0].legend(["Equation", "Eckmann X", "Eckmann Y"], loc ="lower right")
+       if simCase == "Standard":
+          ax[0].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
+          ax[0].legend(["Equation", "Eckmann X"], loc ="lower right")
+       else:
+          ax[0].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
+          ax[0].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')
+          ax[0].legend(["Equation", "Eckmann X", "Eckmann Y"], loc ="lower right")
     
 plt.minorticks_on()
 minorLocatorX = AutoMinorLocator(5) # number of minor intervals per major # inteval
@@ -404,17 +402,18 @@ if RoEck == True:
     if omitRosenstein == False:
        ax[1].plot(np.array(mu0ListLP),np.array(lya_r_X),'k:')
        ax[1].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
-       ax[1].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')  
+       ax[1].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')
        ax[1].legend(["Equation", "Rosenstein", "Eckmann X", "Eckmann Y"], loc ="lower right")
     else:
-       ax[1].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
-       ax[1].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')  
-       ax[1].legend(["Equation", "Eckmann X", "Eckmann Y"], loc ="lower right")
+       if simCase == "Standard":
+          ax[1].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
+          ax[1].legend(["Equation", "Eckmann X"], loc ="lower right")
+       else:
+          ax[1].plot(np.array(mu0ListLP),np.array(lya_e_X1),'r-')
+          ax[1].plot(np.array(mu0ListLP),np.array(lya_e_Y1),'g--')  
+          ax[1].legend(["Equation", "Eckmann X", "Eckmann Y"], loc ="lower right")
 
-# remove last tick label for the second subplot
-minorLocatorX = AutoMinorLocator(5) # number of minor intervals per major # inteval
-minorLocatorY = AutoMinorLocator(5)
-ax[1].set_xlabel("$\\mu_{0}$",size = 16)
+ax[1].set_xlabel(r'$\mu_{0}$',size = 16)
 ax[1].set_ylabel("$\\lambda_{y}$",size = 16)
 ax[1].xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
 ax[1].yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
@@ -424,4 +423,4 @@ ax[1].grid(True)
 
 # remove vertical gap between subplots
 #plt.show()
-plt.savefig(str(cwd)+"LyapunovExponents.png")
+plt.savefig(str(cwd)+str(simCase)+"_"+"LyapunovExponents.png")
