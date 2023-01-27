@@ -127,7 +127,7 @@ def Jacobian(x, y, mu0):
 
 def plotFiguresSameX(mu0ListLM, ptsX, ptsY):
     fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True, sharex=True)
-    ax[0].set_title("Logistic Map")
+    #ax[0].set_title("Logistic Map")
     
     # the first subplot
     ax[0].scatter(mu0ListLM,ptsX,color = 'k' , s = 0.1 , marker = '.')
@@ -185,29 +185,29 @@ for mu_ in mu:
         except RuntimeWarning:
             exception = True
             if x_next > 0:
-                print("Warning Line 169! x_next positive infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
+                print("Warning Line 188! x_next positive infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
                 break
             else:
-                print("Warning Line 172! x_next negative infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
+                print("Warning Line 191! x_next negative infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
                 break
             if y_next > 0:
-                print("Warning Line 175! y_next positive infinitle! y_next = {} at mu_ = {}".format(y_next,mu_))
+                print("Warning Line 194! y_next positive infinitle! y_next = {} at mu_ = {}".format(y_next,mu_))
                 break
             else:
-                print("Warning Line 178! y_next negative infinite! y_next = {} at mu_ = {}".format(y_next,mu_))
+                print("Warning Line 197! y_next negative infinite! y_next = {} at mu_ = {}".format(y_next,mu_))
                 break
         else:
             if x_next < 0 and abs(x_next) < tolerance:
                 x_next = 0.0
             if x_next < 0 or x_next >1:
                 exception = True
-                print("Warning Line 185! x_next negative x_next = {} at mu_ = {}".format(x_next, mu_))
+                print("Warning Line 204! x_next out of bound x_next = {} at mu_ = {}".format(x_next, mu_))
                 break
             if y_next < 0 and abs(y_next) < tolerance:
                 y_next = 0.0
             if y_next < 0 or y_next >1:
                 exception = True
-                print("Warning Line 191! y_next negative y_next = {} at mu_ = {}".format(y_next, mu_))
+                print("Warning Line 210! y_next out of bound y_next = {} at mu_ = {}".format(y_next, mu_))
                 break
             traceX[i+1] = x_next
             traceY[i+1] = y_next                 
@@ -235,29 +235,29 @@ for mu_ in mu:
         except RuntimeWarning:
             exception = True 
             if x_next > 0:
-                print("Warning Line 218! x_next positive infinite! mu_ = {}, x_next = {}".format(mu_,x_next))
+                print("Warning Line 238! x_next positive infinite! mu_ = {}, x_next = {}".format(mu_,x_next))
                 break
             else:
-                print("Warning Line 221! x_next negative infinite! mu_ = {}, x_next = {}".format(mu_, x_next))
+                print("Warning Line 241! x_next negative infinite! mu_ = {}, x_next = {}".format(mu_, x_next))
                 break
             if y_next > 0:
-                print("Warning Line 224! y_next positive infinitle! mu_ = {}, y_next = {}".format(mu_, y_next))
+                print("Warning Line 244! y_next positive infinitle! mu_ = {}, y_next = {}".format(mu_, y_next))
                 break
             else:
-                print("Warning Line 227! y_next negative infinite! mu_ = {}, y_next = {}".format(mu_, y_next))
+                print("Warning Line 247! y_next negative infinite! mu_ = {}, y_next = {}".format(mu_, y_next))
                 break
         else:
             if x_next < 0 and abs(x_next) < tolerance:
                 x_next = 0.0
-            if x_next < 0 :
+            if x_next < 0 or x_next>1:
                 exception = True
-                print("Warning Line 234! x_next negative x_next = {} at mu_ = {}".format(x_next, mu_))
+                print("Warning Line 254! x_next out of bound x_next = {} at mu_ = {}".format(x_next, mu_))
                 break
             if y_next < 0 and abs(y_next) < tolerance:
                 y_next = 0.0
-            if y_next < 0:
+            if y_next < 0 or y_next>1:
                 exception = True
-                print("Warning Line 240! y_next negative y_next = {} at mu_ = {}".format(y_next, mu_))
+                print("Warning Line 260! y_next out of bound y_next = {} at mu_ = {}".format(y_next, mu_))
                 break
             if i >= avoidTransient:
                 mu0ListLM += [mu_]
@@ -312,35 +312,35 @@ if RoEck == True:
             except RuntimeWarning:
                 exception = True
                 if x_next > 0:
-                    print("Warning Line 294! x_next positive infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
+                    print("Warning Line 315! x_next positive infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
                     break
                 else:
-                    print("Warning Line 297! x_next negative infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
+                    print("Warning Line 318! x_next negative infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
                     break
                 if y_next > 0:
-                    print("Warning Line 300! y_next positive infinitle! y_next = {} at mu_ = {}".format(y_next,mu_))
+                    print("Warning Line 321! y_next positive infinitle! y_next = {} at mu_ = {}".format(y_next,mu_))
                     break
                 else:
-                    print("Warning Line 303! y_next negative infinite! y_next = {} at mu_ = {}".format(y_next,mu_))
+                    print("Warning Line 324! y_next negative infinite! y_next = {} at mu_ = {}".format(y_next,mu_))
                     break
             else:
                 if x_next < 0 and abs(x_next) < tolerance:
                     x_next = 0.0
-                if x_next < 0 :
+                if x_next < 0 or x_next>1:
                     exception = True
-                    print("Warning Line 310! x_next negative x_next = {} at mu_ = {}".format(x_next, mu_))
+                    print("Warning Line 331! x_next out of bound x_next = {} at mu_ = {}".format(x_next, mu_))
                     break
                 if y_next < 0 and abs(y_next) < tolerance:
                     y_next = 0.0
-                if y_next < 0:
+                if y_next < 0 or y_next>1:
                     exception = True
-                    print("Warning Line 316! y_next negative y_next = {} at mu_ = {}".format(y_next, mu_))
+                    print("Warning Line 337! y_next out of bound y_next = {} at mu_ = {}".format(y_next, mu_))
                     break
                 X[i+1] = x_next
                 Y[i+1] = y_next
                 i += 1 
         if exception == True: 
-            print("Warning! mu0List error! Line 322")
+            print("Warning! mu0List error! Line 343")
             break
         else:
             try:
@@ -363,7 +363,7 @@ if RoEck == True:
 #%%
 # plot lyapunov exponents
 fig, ax = plt.subplots(2, 1, figsize=(16,9), constrained_layout=True, sharex=True)
-ax[0].set_title("Lyapunov Exponents")
+#ax[0].set_title("Lyapunov Exponents")
     
 # the first subplot
 ax[0].plot(np.array(mu0ListLP),np.array(sumLPX),'b-.')

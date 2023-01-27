@@ -324,29 +324,29 @@ for ii, mu_ in enumerate(mu):
         except RuntimeWarning:
             exception = True
             if x_next > 0:
-                print("Warning Line 329! x_next positive infinite! x_next = {} at mu = {}".format(x_next,mu_))
+                print("Warning Line 327! x_next positive infinite! x_next = {} at mu = {}".format(x_next,mu_))
                 break
             else:
-                print("Warning Line 332! x_next negative infinite! x_next = {} at mu = {}".format(x_next,mu_))
+                print("Warning Line 330! x_next negative infinite! x_next = {} at mu = {}".format(x_next,mu_))
                 break
             if y_next > 0:
-                print("Warning Line 335! y_next positive infinite! y_next = {} at mu = {}".format(y_next,mu_))
+                print("Warning Line 333! y_next positive infinite! y_next = {} at mu = {}".format(y_next,mu_))
                 break
             else:
-                print("Warning Line 338! y_next negative infinite! y_next = {} at mu = {}".format(y_next,mu_))
+                print("Warning Line 336! y_next negative infinite! y_next = {} at mu = {}".format(y_next,mu_))
                 break
         else:
             if x_next < 0 and abs(x_next) < tolerance:
                 x_next = 0.0
             if x_next < 0 or x_next >1:
                 exception = True
-                print("Warning Line 345! x_next out of bound x_next = {} at mu = {}".format(x_next,mu_))
+                print("Warning Line 343! x_next out of bound x_next = {} at mu = {}".format(x_next,mu_))
                 break
             if y_next < 0 and abs(y_next) < tolerance:
                 y_next = 0.0
             if y_next < 0 or y_next >1:
                 exception = True
-                print("Warning Line 351! y_next out of bound y_next = {} at mu = {}".format(y_next,mu_))
+                print("Warning Line 349! y_next out of bound y_next = {} at mu = {}".format(y_next,mu_))
                 break
             traceX[ii,i+1] = x_next
             traceY[ii,i+1] = y_next
