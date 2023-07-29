@@ -1,0 +1,6 @@
+simCase: Vorticella
+init X = 0.01000
+init Y = 0.10000
+alpha = 5.00000
+beta = 0.00100
+gamma = 0.90000

@@ -1,0 +1,6 @@
+simCase: Standard
+init X = 0.10000
+init Y = 0.50000
+alpha = 1.00000
+beta = 0.10000
+gamma = 0.50000

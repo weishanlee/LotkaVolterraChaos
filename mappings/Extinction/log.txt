@@ -1,0 +1,7 @@
+simCase: Extinction
+init X = 0.01000
+init Y = 0.10000
+alpha = 1.00000
+beta = 0.00100
+gamma = 0.50000
+mu0_max = 3.99700
