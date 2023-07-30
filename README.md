@@ -1,2 +1,2 @@
 # LotkaVolterraChaos
-Chaos of discrete Lokta Volterra Chaos
+Chaos of discrete Lokta Volterra Equations
