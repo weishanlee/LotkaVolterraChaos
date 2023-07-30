@@ -47,10 +47,10 @@ xZoomIn = False
 # For E3 lies in the 1st quardrant, either {alpha<1 or gamma<beta}
 # or either {alpha>1 or gamma>beta}
 ###############################################################################
-simCase = "Vorticella"
+simCase = "Standard"
 
 if simCase == "Trial":
-   initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.500
+   initX, initY, alpha, beta, gamma = 0.500, 0.100, 0.000, 0.000, 0.000
    step  = 0.005 
    RoEck = False 
    dirname = "{:.5f}".format(initX)+\
@@ -70,15 +70,15 @@ elif simCase == "Normal": # ok
        step  = 0.001
     else:
        step  = 0.005
-elif simCase == "Extinction": # ok
-    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.500 # extinction
-    step  = 0.001
 elif simCase == "Standard":   
     initX, initY, alpha, beta, gamma = 0.100, 0.500, 1.000, 0.100, 0.500 # standard 
     if xZoomIn == True:
        step  = 0.001
     else:
        step  = 0.005
+elif simCase == "Extinction": # ok
+    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.500 # extinction
+    step  = 0.001
 elif simCase == "Vorticella": 
     initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.001, 0.900 # vorticella (bell-shaped)
     if xZoomIn == True:
