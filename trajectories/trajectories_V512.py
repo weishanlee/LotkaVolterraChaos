@@ -471,7 +471,7 @@ norm = mpl.colors.Normalize(vmin=mu.min(), vmax=mu.max())   # for continuous col
 cmap = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)          # for continuous color map
 cmap.set_array([])                                          # for continuous color map
 #%% 
-# plot |omega1|, |omega0|, Im(omega1), Re(Omega1), Im(Omega0), Re(Omega0) 
+# plot Re(Omega0), Im(Omega0), |omega0|, Re(Omega1), Im(omega1), |omega1|   
 # vs mu0 for fixed points E1, E2, and E3
 
 w0E1 = []
@@ -501,23 +501,32 @@ for mu_ in mu:
     w0E3 += [w[0]]
     w1E3 += [w[1]]
 
-ReW0E1, ImW0E1, absW0E1 = np.real(w0E1), np.imag(w0E1), map(abs,w0E1)
-ReW1E1, ImW1E1, absW1E1 = np.real(w1E1), np.imag(w1E1), map(abs,w1E1)
+ReW0E1, ImW0E1 = np.real(w0E1), np.imag(w0E1)# , map(abs,w0E1)
+absW0E1 = np.sqrt( ReW0E1**2 + ImW0E1**2 )
 
-ReW0E2, ImW0E2, absW0E2 = np.real(w0E2), np.imag(w0E2), map(abs,w0E2)
-ReW1E2, ImW1E2, absW1E2 = np.real(w1E2), np.imag(w1E2), map(abs,w1E2)
+ReW1E1, ImW1E1 = np.real(w1E1), np.imag(w1E1)#, map(abs,w1E1)
+absW1E1 = np.sqrt( ReW1E1**2 + ImW1E1**2 )
 
-ReW0E3, ImW0E3, absW0E3 = np.real(w0E3), np.imag(w0E3), map(abs,w0E3)
-ReW1E3, ImW1E3, absW1E3 = np.real(w1E3), np.imag(w1E3), map(abs,w1E3)
+ReW0E2, ImW0E2 = np.real(w0E2), np.imag(w0E2)#, map(abs,w0E2)
+absW0E2 = np.sqrt( ReW0E2**2 + ImW0E2**2 )
+
+ReW1E2, ImW1E2 = np.real(w1E2), np.imag(w1E2)#, map(abs,w1E2)
+absW1E2 = np.sqrt( ReW1E2**2 + ImW1E2**2 )
+
+ReW0E3, ImW0E3 = np.real(w0E3), np.imag(w0E3)#, map(abs,w0E3)
+absW0E3 = np.sqrt( ReW0E3**2 + ImW0E3**2 )
+
+ReW1E3, ImW1E3 = np.real(w1E3), np.imag(w1E3)#, map(abs,w1E3)
+absW1E3 = np.sqrt( ReW1E3**2 + ImW1E3**2 )
 
 data = {'mu0': mu,'ReW0E1':  ReW0E1, 'ReW0E2':  ReW0E2, 'ReW0E3':  ReW0E3,
                   'ImW0E1':  ImW0E1, 'ImW0E2':  ImW0E2, 'ImW0E3':  ImW0E3,
-                 'absW0E1': absW0E1,'absW0E2': absW0E2,'absW0E3': absW0E3,#
+                 'absW0E1': absW0E1,'absW0E2': absW0E2,'absW0E3': absW0E3,
                   'ReW1E1':  ReW1E1, 'ReW1E2':  ReW1E2, 'ReW1E3':  ReW1E3,
                   'ImW1E1':  ImW1E1, 'ImW1E2':  ImW1E2, 'ImW1E3':  ImW1E3,
                  'absW1E1': absW1E1,'absW1E2': absW1E2,'absW1E3': absW1E3}
 df = pd.DataFrame(data)
-df_file = open(str(folderPopVsN)+str(simCase)+"ReImAbs.csv",'w',newline='')
+df_file = open(str(folderEigVals)+str(simCase)+"ReImAbs.csv",'w',newline='')
 df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
 df_file.close()
 
@@ -531,13 +540,13 @@ for i in range(0,18):
     
     if i!= 15 and i!=16 and i!=17:
        plt.tick_params(
-       axis='x',          # changes apply to the x-axis
+       axis='x',           # changes apply to the x-axis
        which='major',      # both major and minor ticks are affected
-       bottom=True,      # ticks along the bottom edge are off
-       top=False,         # ticks along the top edge are off
-       labelbottom=False) # labels along the bottom edge are off
+       bottom=True,        # ticks along the bottom edge are off
+       top=False,          # ticks along the top edge are off
+       labelbottom=False)  # labels along the bottom edge are off
     
-    ax.plot( df.iloc[:,0], df.iloc[:,i], 'k-')
+    ax.plot( df.iloc[:,0], df.iloc[:,i+1], 'k-')
     ax.xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
     ax.yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
     ax.grid(True)
@@ -562,7 +571,7 @@ for i in range(0,18):
        
 plt.tight_layout()       
 plt.savefig(str(folderEigVals)+str(simCase)+"_"+"ReImAbs.jpg", bbox_inches = 'tight',pad_inches = 0)
-# end of plot |omega1|, |omega0|, Im(omega1), Re(Omega1), Im(Omega0), Re(Omega0) 
+# end of plot Re(Omega0), Im(Omega0), |omega0|, Re(Omega1), Im(omega1), |omega1|
 # vs mu0 for fixed points E1, E2, and E3
 #%%
 # plot of Imaginary part vs. Real part of eigenvalues w0 and w1, and 
