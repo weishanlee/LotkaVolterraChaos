@@ -36,7 +36,6 @@ Modification Note:
    13. Modify plt.arrorw  in def plotFigure function. 
    14. Find xlim, ylim for phase portrait, and phase spaces automatically. 
    15. Remove plt.arrow in def plotFigure
-   16. Remove outPutPoPVsIteration calculations
 """
 import numpy as np
 import matplotlib as mpl  # for continuous color map
@@ -67,7 +66,7 @@ step  = 0.005
 # initX and initY are numbers between 0 and 1
 # alpha, beta, and gamma are all greater than 0
 ###############################################################################
-simCase = "Vorticella"
+simCase = "Standard"
 
 if simCase == "Trial":
    initX, initY, alpha, beta, gamma = 0.200, 0.200, 1.000, 0.001, 0.500
@@ -256,7 +255,7 @@ def plotFigureAxStream(mu0, ptsX, ptsY,xmin,xmax,ymin,ymax):
 
 # added to save csv of x vs. n and y vs. n
 def outPutPoPVsIteration(nIterations,mu0, ptsX, ptsY):
-    data = {'nIterations': nIterations,'prey': ptsX,'ptsY':ptsY}
+    data = {'nIterations': nIterations,'prey': ptsX,'predator':ptsY}
     df = pd.DataFrame(data)
     df_file = open(str(folderPopVsN)+str(simCase)+"PopVsN"+"_{:.5f}".format(mu0)+".csv",'w',newline='')
     df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
@@ -769,13 +768,18 @@ for ii in range(len(mu)):
                xMin, xMax, yMin, yMax) # for a single phase portrait black figure for an arrow                 
                 
     ax.plot(traceX[ii,0:nIterations],traceY[ii,0:nIterations],'.',color = color,alpha=alpha_,markersize=3)  # set alpha=0.1 for chaos
+    
+    if any(traceY[ii,1:]>0.0)  :
+        print("y greater than 0 at mu = {}, value = {}".format(mu_,traceY[ii,:]))
+    
+    
     plotPopVsIteration(np.arange(nIterations),mu_, traceX[ii,0:nIterations], traceY[ii,0:nIterations],
                        xMin, xMax, yMin, yMax)   # added to plot x vs. n and y vs. n
-    #outPutPoPVsIteration(np.arange(nIterations),mu_, traceX[ii,0:nIterations], traceY[ii,0:nIterations]) # added to save csv of x vs. n and y vs. n
+    outPutPoPVsIteration(np.arange(nIterations),mu_, traceX[ii,0:nIterations], traceY[ii,0:nIterations]) # added to save csv of x vs. n and y vs. n
     
     fPtE1, fPtE2, fPtE3 = fixedPoints(mu_)
     
-    if plotStreamplot == "True":
+    if plotStreamplot == True:
        plotFigureAxStream(mu_,traceX[ii,0:nIterations],traceY[ii,0:nIterations],
                           xMin,xMax,yMin,yMax)
 
