@@ -36,6 +36,9 @@ Modification Note:
    13. Modify plt.arrorw  in def plotFigure function. 
    14. Find xlim, ylim for phase portrait, and phase spaces automatically. 
    15. Remove plt.arrow in def plotFigure
+   16. Plot 3d phase portrait vs mu
+   17. Rewrite Find suitable muList
+
 """
 import numpy as np
 import matplotlib as mpl  # for continuous color map
@@ -49,6 +52,11 @@ import warnings
 import pandas as pd
 import sys
 from scipy.interpolate import griddata
+from inspect import currentframe
+
+def get_linenumber():
+    cf = currentframe()
+    return cf.f_back.f_lineno
 
 warnings.filterwarnings("error")
 
@@ -66,31 +74,28 @@ step  = 0.005
 # initX and initY are numbers between 0 and 1
 # alpha, beta, and gamma are all greater than 0
 ###############################################################################
-simCase = "Standard"
+simCase = "Trial"
 
 if simCase == "Trial":
-   initX, initY, alpha, beta, gamma = 0.200, 0.200, 1.000, 0.001, 0.500
+   initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.197
    #step  = 0.005  
    dirname = "{:.5f}".format(initX)+\
               "_{:.5f}".format(initY)+\
               "_{:.5f}".format(alpha)+\
               "_{:.5f}".format( beta)+\
               "_{:.5f}".format(gamma)
-#elif simCase == "Paraclete":
-#    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.010, 0.900 # paraclete
 elif simCase == "Normal": 
     initX, initY, alpha, beta, gamma = 0.200, 0.200, 1.000, 0.001, 0.500 # normal 
 elif simCase == "Standard":   
-    initX, initY, alpha, beta, gamma = 0.100, 0.500, 1.000, 0.100, 0.500 # standard 
+    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.197 # standard 
 elif simCase == "Extinction": 
     initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.500 # extinction
 elif simCase == "Vorticella": 
-    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.001, 0.900 # vorticella (bell-shaped)
-#elif simCase == "VS":
-#    initX, initY, alpha, beta, gamma = 0.100, 0.500, 0.875, 0.018, 1.000 # vorticella strange
+    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.912 # vorticella
 else:
     sys.exit("Wrong simCase!")
-dirname = simCase
+if simCase != "Trial":
+   dirname = simCase
 ###############################################################################
 
 # parent folder
@@ -103,10 +108,16 @@ dirnameTraj = dirname + "/" + str("trajectory")
 Path(dirnameTraj).mkdir(parents=True, exist_ok=True)
 folderTraj = "./" + str(dirnameTraj) + "/"
 
+# folder of plots of 3d phase portrait
+dirnameTraj3D = dirname + "/" + str("trajectory3D")
+Path(dirnameTraj3D).mkdir(parents=True, exist_ok=True)
+folderTraj3D = "./" + str(dirnameTraj3D) + "/"
+
 # folder of plots of x and y phase portrait with ax.streamplot # after version V511
-dirnamePhasePortrait = dirname + "/" + str("PhasePortrait")
-Path(dirnamePhasePortrait).mkdir(parents=True, exist_ok=True)
-folderPhasePortrait = "./" + str(dirnamePhasePortrait) + "/"
+if plotStreamplot == True:
+   dirnamePhasePortrait = dirname + "/" + str("PhasePortrait")
+   Path(dirnamePhasePortrait).mkdir(parents=True, exist_ok=True)
+   folderPhasePortrait = "./" + str(dirnamePhasePortrait) + "/"
 
 # folder of plots of imaginary vs real part, and absolute values of
 # eigenvalues
@@ -172,7 +183,7 @@ def jacobian(fs, xs, mu0, h=1e-4):
 
 def plotFigure(mu0, ptsX, ptsY,xmin,xmax,ymin,ymax):
     plt.figure(figsize=(16,9), constrained_layout=True)
-    plt.title("Trajectory")
+    #plt.title("Trajectory")
     ax = plt.gca()
     plt.text(xmax * 0.9, ymax * 0.9, r'$\mu_{0} = $' + "{:.3f}".format(mu0),fontsize=12)
     #plt.arrow(ptsX[0], ptsY[0], (ptsX[1]-ptsX[0])/2.0, (ptsY[1]-ptsY[0])/2.0, 
@@ -390,7 +401,7 @@ def handlesAndLabels(scatter, area_, handles_, labels_, i10_, i50_, i100_, i200_
 nIterations = 2500
 
 mu = np.arange(mu0_min, mu0_max, step)
-muList = [] #[mu0_min]
+muList = []
 
 traceX = np.zeros([len(mu), nIterations])
 traceY = np.zeros([len(mu), nIterations])
@@ -399,48 +410,27 @@ for ii, mu_ in enumerate(mu):
     traceX[ii,0] = initX
     traceY[ii,0] = initY
 
-    # version 2
     i = 0 
-    exception = False
-    while (i < nIterations - 1):
-        try:
-            x_next, y_next = newAttractor(traceX[ii,i], traceY[ii,i], mu_)
-        except RuntimeWarning:
-            exception = True
-            if x_next > 0:
-                print("Warning Line 329! x_next positive infinite! x_next = {} at mu = {}".format(x_next,mu_))
-                break
-            else:
-                print("Warning Line 332! x_next negative infinite! x_next = {} at mu = {}".format(x_next,mu_))
-                break
-            if y_next > 0:
-                print("Warning Line 335! y_next positive infinite! y_next = {} at mu = {}".format(y_next,mu_))
-                break
-            else:
-                print("Warning Line 338! y_next negative infinite! y_next = {} at mu = {}".format(y_next,mu_))
-                break
-        else:
-            if x_next < 0 or x_next >1:
-                exception = True
-                print("Warning Line 345! x_next out of bound x_next = {} at mu = {}".format(x_next,mu_))
-                break
-            if y_next < 0 or y_next >1:
-                exception = True
-                print("Warning Line 351! y_next out of bound y_next = {} at mu = {}".format(y_next,mu_))
-                break
-            traceX[ii,i+1] = x_next
-            traceY[ii,i+1] = y_next
-            i += 1
-    if exception == False:
-        muList += [mu_]
-    else:
-        writeLog(r'mu0_max = '+ "{:.5f}\n".format(muList[-1]))
-        break
+    while ( all( x>=0 and x<=1 for x in newAttractor(traceX[ii,i], traceY[ii,i], mu_) ) ):
+        x_next, y_next = newAttractor(traceX[ii,i], traceY[ii,i], mu_)
+        if i == nIterations - 1: break
+        traceX[ii,i+1] = x_next
+        traceY[ii,i+1] = y_next
+        i += 1
+    muList += [mu_]
+    if len(traceX[:,0])!=len(mu) or len(traceY[:,0])!=len(mu):
+       print("Warning Line {}! len(traceX) = {} and len(traceY) = {}," +
+             " but len(mu) = {}".format(get_linenumber(),len(traceX[:,0]),len(traceY[:,0]),len(mu)))
+       sys.exit()
 
 mu = np.array(muList) 
 
+traceX = traceX[:len(mu),:]
+traceY = traceY[:len(mu),:]
+
 if len(traceX[:,0])!=len(mu) or len(traceY[:,0])!=len(mu):
-   print("Warning Line 444! len(traceX) = {} and len(traceY) = {}, but len(mu) = {}".format(len(traceX[:,0]),len(traceY[:,0]),len(mu)))
+   print("Warning Line {}! len(traceX) = {} and len(traceY) = {}," +
+         " but len(mu) = {}".format(get_linenumber(),len(traceX[:,0]),len(traceY[:,0]),len(mu)))
    sys.exit()
 # end of find suitable muList V508
 #%%
@@ -569,7 +559,9 @@ for i in range(0,18):
        ax.set_xlabel(r'$\mu_{0}$'+str(" at ")+r'$E^{\prime}_{3}$',size = 12)
        
 plt.tight_layout()       
-plt.savefig(str(folderEigVals)+str(simCase)+"_"+"ReImAbs.jpg", bbox_inches = 'tight',pad_inches = 0)
+plt.savefig(str(folderEigVals)+str(simCase)+"_"+"ReImAbs.jpg", 
+            bbox_inches = 'tight',pad_inches = 0)
+plt.close()
 # end of plot Re(Omega0), Im(Omega0), |omega0|, Re(Omega1), Im(omega1), |omega1|
 # vs mu0 for fixed points E1, E2, and E3
 #%%
@@ -692,6 +684,7 @@ ax[3,1].axis('off')
 ax[3,2].axis('off')
 
 fig.savefig(str(folderEigVals)+str(simCase)+"_"+"ReImAbs_color.jpg")
+plt.close()
 # end of plot of Imaginary part vs. Real part of eigenvalues w0 and w1, and 
 # absolute Values of eigenvalues |w1| vs. |w0| for fixed points E1, E2, and E3
 #%%
@@ -720,6 +713,7 @@ ax.grid(True)
 #plt.ylim(-0.01,1.02)
 #plt.show()
 fig.savefig(str(folderXPhaseSpace)+str(simCase)+"_"+"phaseSpaceX_all.jpg")
+plt.close()
 
 ## plot phase space of y
 fig = plt.figure(figsize=(16,9), constrained_layout=True)
@@ -744,6 +738,7 @@ ax.grid(True)
 #plt.ylim(-0.01,1.02)
 #plt.show()
 fig.savefig(str(folderYPhaseSpace)+str(simCase)+"_"+"phaseSpaceY_all.jpg")
+plt.close()
 # end of plot phase space
 #%%
 # plot coordinate space (phase portrait)
@@ -751,7 +746,7 @@ fig.savefig(str(folderYPhaseSpace)+str(simCase)+"_"+"phaseSpaceY_all.jpg")
 fig = plt.figure(figsize=(16,9), constrained_layout=True)
 ax = fig.add_subplot(111)
 
-nIterations = 600 # Reduce nIterations if the black area is large. 
+nIterations = 600 # nIterations=600 if the black area is large.    
 handles1 = []
 labels1 = []
 
@@ -769,9 +764,10 @@ for ii in range(len(mu)):
                 
     ax.plot(traceX[ii,0:nIterations],traceY[ii,0:nIterations],'.',color = color,alpha=alpha_,markersize=3)  # set alpha=0.1 for chaos
     
-    if any(traceY[ii,1:]>0.0)  :
-        print("y greater than 0 at mu = {}, value = {}".format(mu_,traceY[ii,:]))
-    
+    #if any(traceY[ii,1:]>0.0)  :
+    #    print("y greater than 0 at mu = {}, value = {}".format(mu_,traceY[ii,:]))
+    #    ax.plot(traceX[ii,0:nIterations],traceY[ii,0:nIterations],'.',color = color,alpha=alpha_,markersize=3)  # set alpha=0.1 for chaos
+
     
     plotPopVsIteration(np.arange(nIterations),mu_, traceX[ii,0:nIterations], traceY[ii,0:nIterations],
                        xMin, xMax, yMin, yMax)   # added to plot x vs. n and y vs. n
@@ -786,25 +782,25 @@ for ii in range(len(mu)):
     # type for fixpoint E1
     w, area = fixedPointType(fPtE1, mu_)
     if fPtE1[0]>=0.0 and fPtE1[0]<=1.0 and fPtE1[1]>=0.0 and fPtE1[1]<=1.0:
-       scatter = ax.scatter(fPtE1[0],fPtE1[1],color = color, s = area, alpha=alpha_)
-       handles1, labels1, i10, i50, i100, i200 =\
-       handlesAndLabels(scatter, area, handles1, labels1, i10, i50, i100, i200)
+    #   scatter = ax.scatter(fPtE1[0],fPtE1[1],color = color, s = area, alpha=alpha_)
+    #   handles1, labels1, i10, i50, i100, i200 =\
+    #   handlesAndLabels(scatter, area, handles1, labels1, i10, i50, i100, i200)
        ax.plot(fPtE1[0],fPtE1[1],'k.',markersize=1)
         
     # type for fixpoint E2
     w, area = fixedPointType(fPtE2, mu_)
     if fPtE2[0]>=0.0 and fPtE2[0]<=1.0 and fPtE2[1]>=0.0 and fPtE2[1]<=1.0:
-       scatter = ax.scatter(fPtE2[0],fPtE2[1],color = color, s = area, alpha=alpha_)
-       handles1, labels1, i10, i50, i100, i200 =\
-       handlesAndLabels(scatter, area, handles1, labels1, i10, i50, i100, i200)
+    #   scatter = ax.scatter(fPtE2[0],fPtE2[1],color = color, s = area, alpha=alpha_)
+    #   handles1, labels1, i10, i50, i100, i200 =\
+    #   handlesAndLabels(scatter, area, handles1, labels1, i10, i50, i100, i200)
        ax.plot(fPtE2[0],fPtE2[1],'k.',markersize=1)
         
     # type for fixpoint E3
     w, area = fixedPointType(fPtE3, mu_)
     if fPtE3[0]>=0.0 and fPtE3[0]<=1.0 and fPtE3[1]>=0.0 and fPtE3[1]<=1.0:
-       scatter = ax.scatter(fPtE3[0],fPtE3[1],color = color, s = area, alpha=alpha_)
-       handles1, labels1, i10, i50, i100, i200 =\
-       handlesAndLabels(scatter, area, handles1, labels1, i10, i50, i100, i200)
+    #   scatter = ax.scatter(fPtE3[0],fPtE3[1],color = color, s = area, alpha=alpha_)
+    #   handles1, labels1, i10, i50, i100, i200 =\
+    #   handlesAndLabels(scatter, area, handles1, labels1, i10, i50, i100, i200)
        ax.plot(fPtE3[0],fPtE3[1],'k.',markersize=1)         
             
 cbar = fig.colorbar(cmap,ticks = np.arange(1,int(np.ceil(norm.vmax))+1),aspect=40)
@@ -815,11 +811,67 @@ ax.set_xlabel("x",size = 16)
 ax.set_ylabel("y",size = 16)
 ax.xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
 ax.yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
-ax.legend(handles1, labels1, title="Type")
+#ax.legend(handles1, labels1, title="Type")
 ax.grid(True)
 #plt.show()
 fig.savefig(str(folderTraj)+str(simCase)+"_"+"Trajectory_all.jpg")
+plt.close()
 # end of plot coordinate space (phase portrait) from V506
+#%%
+# plot 3d phase portrait vs mu
+from mpl_toolkits.mplot3d import Axes3D
+
+nIterations = 600 # nIterations=600 if the black area is large.    
+avoidTransient = 200
+alpha_ = 0.3  
+
+angleStep = 20
+maxMu = np.max(mu)
+
+for elev in range(0,360,angleStep):
+    for azim in range(0,360,angleStep):
+        fig = plt.figure(figsize=(16,9), constrained_layout=True)
+        ax = fig.add_subplot(111, projection='3d')
+
+        ax.view_init(elev, azim) #elev, azim 
+                                 # (0,0) -> YZ; (0, -90) -> XZ; (90, 270) -> XY 
+        
+        for ii in range(0,len(mu)):
+            mu_ = mu[ii]
+            color = cmap.to_rgba(mu_)
+            step3d = 1
+            
+            ax.plot(traceY[ii,avoidTransient:nIterations:step3d],
+                    np.array( [mu_] * len( traceY[ii,avoidTransient:nIterations:step3d] ) ),
+                    traceX[ii,avoidTransient:nIterations:step3d],
+                    '.',color=color,alpha=alpha_,markersize=1)  
+            
+        ## the block is for vorticella only
+        #indexSpecialForVorticella = [411,430,462,474,511,540]
+        #for ii in indexSpecialForVorticella:
+        #    mu_ = mu[ii]
+        #    color = cmap.to_rgba(mu_)
+        #    step3d = 1
+        #    
+        #    ax.plot(traceY[ii,avoidTransient:nIterations:step3d],
+        #            np.array( [mu_] * len( traceY[ii,avoidTransient:nIterations:step3d] )),
+        #            traceX[ii,avoidTransient:nIterations:step3d],
+        #            '.',color=color,alpha=alpha_,markersize=1)  
+        ax.text(yMax * 0.9, maxMu * 0.9, xMax * 0.9,
+                "elev = {}\u00b0, azim = {}\u00b0".format(elev,azim),fontsize = 12 )            
+
+        #plt.minorticks_on()  # no fig.minorticks_on()
+        ax.set_xlabel("y",size = 16)
+        ax.set_ylabel(r'$\mu_{0}$',size = 16)
+        ax.set_zlabel("x",size = 16)
+        #ax.xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
+        #ax.yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
+        ax.set_ylim([3,4])
+        ax.grid(True)  
+        fig.savefig(str(folderTraj3D)+str(simCase)+"_"+"phasePortrait3D"+"_"+\
+                    "{:03d}_{:03d}.jpg".format(elev,azim))
+        plt.close()
+# plot 3d phase portrait vs mu
 #%%                 
 import moviepy.video.io.ImageSequenceClip
 fps=10
@@ -828,6 +880,12 @@ image_files = [os.path.join(folderTraj,img)
                if img.endswith(".jpg")]
 clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files[0:-1], fps=fps)
 clip.write_videofile(str(folderTraj)+str(simCase)+"_"+'trajectory.mp4')
+print("------------------------------------------\n")
+image_files = [os.path.join(folderTraj3D,img)
+               for img in sorted(os.listdir(folderTraj3D))
+               if img.endswith(".jpg")]
+clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files[0:-1], fps=1)
+clip.write_videofile(str(folderTraj3D)+str(simCase)+"_"+'phasePortrait3D.mp4')
 print("------------------------------------------\n")
 image_files = [os.path.join(folderPopVsN,img)
                for img in sorted(os.listdir(folderPopVsN))

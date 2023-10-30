@@ -17,6 +17,8 @@ Modification Note:
       6. discard gridspec.GridSpec for plots
       7. Modify def newAttractor, def jacobian, and def func from pplane.py
       8. Change simCase instructions a little bit.
+      9. Include from inspect
+     10. Rewrite Find suitable muList
 """
 
 import numpy as np
@@ -31,7 +33,11 @@ import warnings
 warnings.filterwarnings("error")
 import sys
 
-tolerance = 1e-8
+from inspect import currentframe
+
+def get_linenumber():
+    cf = currentframe()
+    return cf.f_back.f_lineno
  
 mu0_min = 1
 mu0_max = 4
@@ -45,52 +51,45 @@ xZoomIn = False
 # initX and initY are numbers between 0 and 1
 # alpha, beta, and gamma are all greater than 0
 # For E3 lies in the 1st quardrant, either {alpha<1 or gamma<beta}
-# or either {alpha>1 or gamma>beta}
+# or {alpha>1 or gamma>beta}
 ###############################################################################
-simCase = "Standard"
+simCase = "Vorticella"
 
 if simCase == "Trial":
-   initX, initY, alpha, beta, gamma = 0.500, 0.100, 0.000, 0.000, 0.000
-   step  = 0.005 
-   RoEck = False 
+   initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.000, 0.000
+   step  = 0.001 
+   RoEck = False
+   xZoomIn = True
    dirname = "{:.5f}".format(initX)+\
               "_{:.5f}".format(initY)+\
               "_{:.5f}".format(alpha)+\
               "_{:.5f}".format( beta)+\
               "_{:.5f}".format(gamma)
-#elif simCase == "Paraclete":
-#    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.010, 0.900 # paraclete
-#    if xZoomIn == True:
-#       step  = 0.001
-#    else:
-#       step  = 0.005
-elif simCase == "Normal": # ok
+elif simCase == "Normal":
     initX, initY, alpha, beta, gamma = 0.200, 0.200, 1.000, 0.001, 0.500 # normal 
     if xZoomIn == True:
        step  = 0.001
     else:
        step  = 0.005
-elif simCase == "Standard":   
-    initX, initY, alpha, beta, gamma = 0.100, 0.500, 1.000, 0.100, 0.500 # standard 
+elif simCase == "Standard": # Note: 0.100, 0.500, 1.000, 0.100, 0.500 also produces standard 
+    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.197 # standard 
     if xZoomIn == True:
        step  = 0.001
     else:
        step  = 0.005
-elif simCase == "Extinction": # ok
+elif simCase == "Extinction": # Note: 0.100, 0.100, 1.000, 0.001, 0.5 also produces extinction. 
     initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.500 # extinction
     step  = 0.001
 elif simCase == "Vorticella": 
-    initX, initY, alpha, beta, gamma = 0.010, 0.100, 5.000, 0.001, 0.900 # vorticella (bell-shaped)
+    initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.912 # vorticella
     if xZoomIn == True:
        step  = 0.001
     else:
        step  = 0.005
-#elif simCase == "VS":
-#    initX, initY, alpha, beta, gamma = 0.100, 0.500, 0.875, 0.018, 1.000 # vorticella strange
-#    step  = 0.001
 else:
     sys.exit("Wrong simCase!")
-dirname = simCase
+if simCase != "Trial":
+   dirname = simCase
 ###############################################################################
 
 Path(dirname).mkdir(parents=True, exist_ok=True)
@@ -198,115 +197,49 @@ def outPutLyaExp(mu0ListLP, EqnLx, RLx, ELx1, ELx2, EqnLy, RLy, ELy1, ELy2, omit
        df_file = open(str(cwd)+str(simCase)+"LyapunovExponents.csv",'w',newline='')
        df.to_csv(df_file, sep=',', encoding='utf-8',index=False)
        df_file.close() 
-   
+
+# Find suitable muList
 nIterations = 2500
+nIterationsTruncated = 600 # Reduce nIterations if the black area is large. 
+avoidTransient = 200
 
 mu = np.arange(mu0_min, mu0_max, step)
-muList = []
-# Find suitable muList
+muList = []       
+       
 for mu_ in mu: 
-    traceX = np.zeros(nIterations)
-    traceY = np.zeros(nIterations)
-    traceX[0] = initX
-    traceY[0] = initY
+    x_next = initX
+    y_next = initY
 
-    # version 2
-    i = 0 
-    exception = False
-    while (i < nIterations - 1):
-        try:
-            x_next, y_next = newAttractor(traceX[i], traceY[i], mu_)
-        except RuntimeWarning:
-            exception = True
-            if x_next > 0:
-                print("Warning Line 192! x_next positive infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
-                break
-            else:
-                print("Warning Line 195! x_next negative infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
-                break
-            if y_next > 0:
-                print("Warning Line 198! y_next positive infinitle! y_next = {} at mu_ = {}".format(y_next,mu_))
-                break
-            else:
-                print("Warning Line 201! y_next negative infinite! y_next = {} at mu_ = {}".format(y_next,mu_))
-                break
-        else:
-            if x_next < 0 or x_next >1:
-                exception = True
-                print("Warning Line 208! x_next out of bound x_next = {} at mu_ = {}".format(x_next, mu_))
-                break
-            if y_next < 0 or y_next >1:
-                exception = True
-                print("Warning Line 214! y_next out of bound y_next = {} at mu_ = {}".format(y_next, mu_))
-                break
-            traceX[i+1] = x_next
-            traceY[i+1] = y_next                 
-            i += 1
-    if exception == False:
-        muList += [mu_]
+    i = 0     
+    
+    while ( all( x>=0 and x<=1 for x in newAttractor(x_next, y_next, mu_) ) ):
+        x_next, y_next = newAttractor(x_next, y_next, mu_)
+        if i == nIterations - 1: break
+        if i >= avoidTransient and i<=nIterationsTruncated:
+            mu0ListLM += [mu_]
+            ptsX += [x_next]
+            ptsY += [y_next]
+            w = LA.eigvals( jacobian(func,(x_next, y_next), mu_ ) )
+
+        i += 1
+    muList += [mu_]      
+    try:
+        np.log( abs((w[0]) ) )
+    except RuntimeWarning:
+        sumLPX += [-float('inf')]
     else:
-        writeLog(r'mu0_max = '+ "{:.5f}\n".format(muList[-1]))
-        break
-
+        sumLPX += [np.log( abs((w[0]) ) ) / np.log(2)]
+    try:
+        np.log( abs((w[1]) ) )
+    except RuntimeWarning:
+        sumLPY += [-float('inf')]
+    else:
+        sumLPY += [np.log( abs((w[1]) ) ) / np.log(2)]
+writeLog(r'mu0_max = '+ "{:.5f}\n".format(muList[-1]))
 mu = muList 
 # end of find suitable muList 
 
-# plot bifurcation
-nIterations = 600 # Reduce nIterations if the black area is large. 
-avoidTransient = 200
-for mu_ in mu:
-    x_next = initX
-    y_next = initY
-    i = 0 
-    exception = False     
-    while (i<nIterations-1):
-        try:
-            x_next, y_next = newAttractor(x_next, y_next, mu_)
-        except RuntimeWarning:
-            exception = True 
-            if x_next > 0:
-                print("Warning Line 242! x_next positive infinite! mu_ = {}, x_next = {}".format(mu_,x_next))
-                break
-            else:
-                print("Warning Line 245! x_next negative infinite! mu_ = {}, x_next = {}".format(mu_, x_next))
-                break
-            if y_next > 0:
-                print("Warning Line 248! y_next positive infinitle! mu_ = {}, y_next = {}".format(mu_, y_next))
-                break
-            else:
-                print("Warning Line 251! y_next negative infinite! mu_ = {}, y_next = {}".format(mu_, y_next))
-                break
-        else:
-            if x_next < 0 or x_next>1:
-                exception = True
-                print("Warning Line 258! x_next out of bound x_next = {} at mu_ = {}".format(x_next, mu_))
-                break
-            if y_next < 0 or y_next>1:
-                exception = True
-                print("Warning Line 264! y_next out of bound y_next = {} at mu_ = {}".format(y_next, mu_))
-                break
-            if i >= avoidTransient:
-                mu0ListLM += [mu_]
-                ptsX += [x_next]
-                ptsY += [y_next]
-                w = LA.eigvals( jacobian(func,(x_next, y_next), mu_ ) )
-            i += 1
-    if exception == True:
-        break
-    else:
-        try:
-            np.log( abs((w[0]) ) )
-        except RuntimeWarning:
-            sumLPX += [-float('inf')]
-        else:
-            sumLPX += [np.log( abs((w[0]) ) ) / np.log(2)]
-        try:
-            np.log( abs((w[1]) ) )
-        except RuntimeWarning:
-            sumLPY += [-float('inf')]
-        else:
-            sumLPY += [np.log( abs((w[1]) ) ) / np.log(2)]
-
+# plot bifurcation 
 plotFiguresSameX(mu0ListLM, ptsX, ptsY)
 # end of plot of bifurcation
 #%%
@@ -330,55 +263,28 @@ if RoEck == True:
         Y[0] = initY
         
         i = 0
-        exception = False
-        while (i < nIterations - 1):
-            try:
-                x_next, y_next = newAttractor(X[i], Y[i], mu_)
-            except RuntimeWarning:
-                exception = True
-                if x_next > 0:
-                    print("Warning Line 315! x_next positive infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
-                    break
-                else:
-                    print("Warning Line 318! x_next negative infinite! x_next = {} at mu_ = {}".format(x_next,mu_))
-                    break
-                if y_next > 0:
-                    print("Warning Line 321! y_next positive infinitle! y_next = {} at mu_ = {}".format(y_next,mu_))
-                    break
-                else:
-                    print("Warning Line 324! y_next negative infinite! y_next = {} at mu_ = {}".format(y_next,mu_))
-                    break
-            else:
-                if x_next < 0 or x_next>1:
-                    exception = True
-                    print("Warning Line 331! x_next out of bound x_next = {} at mu_ = {}".format(x_next, mu_))
-                    break
-                if y_next < 0 or y_next>1:
-                    exception = True
-                    print("Warning Line 337! y_next out of bound y_next = {} at mu_ = {}".format(y_next, mu_))
-                    break
-                X[i+1] = x_next
-                Y[i+1] = y_next
-                i += 1 
-        if exception == True: 
-            print("Warning! mu0List error! Line 343")
-            break
-        else:
-            try:
-                lya_r_X += [ nolds.lyap_r(X, emb_dim=10)/np.log(2) ]
-                lya_r_Y += [ nolds.lyap_r(Y, emb_dim=10)/np.log(2) ]
-            except np.linalg.LinAlgError:
-                if omitRosenstein == False:
-                   writeLog("SVD did not converge in linear least square. Rosenstein omitted.\n")
-                   print("SVD did not converge in linear least square. Rosenstein omitted.")
-                   omitRosenstein = True
-                lya_r_X = []
-                lya_r_Y = []
-            finally:
-                lya_e_X1 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
-                lya_e_X2 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
-                lya_e_Y1 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
-                lya_e_Y2 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
+        while ( all( x>=0 and x<=1 for x in newAttractor(x_next, y_next, mu_) ) ):
+            x_next, y_next = newAttractor(x_next, y_next, mu_)
+            if i == nIterations - 1: break
+            X[i+1] = x_next
+            Y[i+1] = y_next
+            i += 1 
+        
+        try:
+            lya_r_X += [ nolds.lyap_r(X, emb_dim=10)/np.log(2) ]
+            lya_r_Y += [ nolds.lyap_r(Y, emb_dim=10)/np.log(2) ]
+        except np.linalg.LinAlgError:
+            if omitRosenstein == False:
+               writeLog("SVD did not converge in linear least square. Rosenstein omitted.\n")
+               print("SVD did not converge in linear least square. Rosenstein omitted.")
+               omitRosenstein = True
+            lya_r_X = []
+            lya_r_Y = []
+        finally:
+            lya_e_X1 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
+            lya_e_X2 += [ nolds.lyap_e(X, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
+            lya_e_Y1 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[0]/np.log(2) ]
+            lya_e_Y2 += [ nolds.lyap_e(Y, emb_dim=10, matrix_dim=2)[1]/np.log(2) ]
     # Write Lyaponov Exponents to csv file
     outPutLyaExp(mu0ListLP, sumLPX, lya_r_X, lya_e_X1, lya_e_X2, 
                             sumLPY, lya_r_Y, lya_e_Y1, lya_e_Y2, omitRosenstein)
@@ -443,9 +349,7 @@ ax[1].xaxis.set_minor_locator(minorLocatorX) # add minor ticks on x axis
 ax[1].yaxis.set_minor_locator(minorLocatorY) # add minor ticks on y axis
 if xZoomIn == True:
    ax[1].set_xlim(2.8,4.0)
-#plt.ylim(-5.2)
 ax[1].grid(True)
 
 # remove vertical gap between subplots
-#plt.show()
 plt.savefig(str(cwd)+str(simCase)+"_"+"LyapunovExponents.png")
