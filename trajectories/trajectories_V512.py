@@ -37,7 +37,6 @@ Modification Note:
    14. Find xlim, ylim for phase portrait, and phase spaces automatically. 
    15. Remove plt.arrow in def plotFigure
    16. Plot 3d phase portrait vs mu
-   17. Rewrite Find suitable muList
 
 """
 import numpy as np
@@ -74,10 +73,10 @@ step  = 0.005
 # initX and initY are numbers between 0 and 1
 # alpha, beta, and gamma are all greater than 0
 ###############################################################################
-simCase = "Trial"
+simCase = "Vorticella"
 
 if simCase == "Trial":
-   initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.197
+   initX, initY, alpha, beta, gamma = 0.010, 0.100, 1.000, 0.001, 0.890
    #step  = 0.005  
    dirname = "{:.5f}".format(initX)+\
               "_{:.5f}".format(initY)+\
@@ -410,18 +409,52 @@ for ii, mu_ in enumerate(mu):
     traceX[ii,0] = initX
     traceY[ii,0] = initY
 
+    # version 2
     i = 0 
-    while ( all( x>=0 and x<=1 for x in newAttractor(traceX[ii,i], traceY[ii,i], mu_) ) ):
-        x_next, y_next = newAttractor(traceX[ii,i], traceY[ii,i], mu_)
-        if i == nIterations - 1: break
-        traceX[ii,i+1] = x_next
-        traceY[ii,i+1] = y_next
-        i += 1
-    muList += [mu_]
-    if len(traceX[:,0])!=len(mu) or len(traceY[:,0])!=len(mu):
-       print("Warning Line {}! len(traceX) = {} and len(traceY) = {}," +
-             " but len(mu) = {}".format(get_linenumber(),len(traceX[:,0]),len(traceY[:,0]),len(mu)))
-       sys.exit()
+    exception = False
+    while (i < nIterations - 1):
+        try:
+            x_next, y_next = newAttractor(traceX[ii,i], traceY[ii,i], mu_)
+        except RuntimeWarning:
+            exception = True
+            if x_next > 0:
+                print("Warning Line {}! x_next positive infinite! x_next = {} at mu = {}".format(get_linenumber(),x_next,mu_))
+                break
+            else:
+                print("Warning Line {}! x_next negative infinite! x_next = {} at mu = {}".format(get_linenumber(),x_next,mu_))
+                break
+            if y_next > 0:
+                print("Warning Line {}! y_next positive infinite! y_next = {} at mu = {}".format(get_linenumber(),y_next,mu_))
+                break
+            else:
+                print("Warning Line {}! y_next negative infinite! y_next = {} at mu = {}".format(get_linenumber(),y_next,mu_))
+                break
+        else:
+            if x_next < 0 or x_next >1:
+                exception = True
+                print("Warning Line {}! x_next out of bound x_next = {} at mu = {}".format(get_linenumber(),x_next,mu_))
+                break
+            if y_next < 0 or y_next >1:
+                exception = True
+                print("Warning Line {}! y_next out of bound y_next = {} at mu = {}".format(get_linenumber(),y_next,mu_))
+                break
+        if exception == False:
+           traceX[ii,i+1] = x_next
+           traceY[ii,i+1] = y_next
+           i += 1
+        else:
+           print("Warning Line {}! exception = True"+
+                 " but expect False. x_next = {}, y_next = {} at mu = {}".format(get_linenumber(),x_next,y_next,mu_))
+           sys.exit()
+    if exception == False:
+       muList += [mu_]
+       if len(traceX[:,0])!=len(mu) or len(traceY[:,0])!=len(mu):
+          print("Warning Line {}! len(traceX) = {} and len(traceY) = {}, but len(mu) = {}".format(get_linenumber(),len(traceX[:,0]),len(traceY[:,0]),len(mu)))
+          sys.exit()
+    else:
+        writeLog(r'mu0_max = '+ "{:.5f}\n".format(muList[-1]))
+        print("Warning Line {}! len(muList) = {}. len(traceX[:,0]) = {}. len(traceY[:,0]) = {}".format(get_linenumber(),len(muList),len(traceX[:,0]),len(traceY[:,0])))
+        break
 
 mu = np.array(muList) 
 
@@ -429,8 +462,7 @@ traceX = traceX[:len(mu),:]
 traceY = traceY[:len(mu),:]
 
 if len(traceX[:,0])!=len(mu) or len(traceY[:,0])!=len(mu):
-   print("Warning Line {}! len(traceX) = {} and len(traceY) = {}," +
-         " but len(mu) = {}".format(get_linenumber(),len(traceX[:,0]),len(traceY[:,0]),len(mu)))
+   print("Warning Line {}! len(traceX) = {} and len(traceY) = {}, but len(mu) = {}".format(get_linenumber(),len(traceX[:,0]),len(traceY[:,0]),len(mu)))
    sys.exit()
 # end of find suitable muList V508
 #%%
